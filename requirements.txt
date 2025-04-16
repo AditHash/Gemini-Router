@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+duckduckgo-search
+requests
+google-genai
+pymongo
+python-dotenv
+pymupdf
+scikit-learn
+numpy
+python-multipart
+langchain
+langchain-community
+langchain-google-genai
+faiss-cpu
+# faiss-gpu
+# chromadb

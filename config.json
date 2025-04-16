@@ -1,0 +1,7 @@
+{
+    "chat": "http://localhost:8001/chat",
+    "search": "http://localhost:8002/search",
+    "think": "http://localhost:8003/think",
+    "query": "http://localhost:8004/query"
+  }
+  
