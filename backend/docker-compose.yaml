@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  router:
+    build: ./router
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./config.json:/app/config.json
+    depends_on:
+      - chat
+      - search
+      - think
+      - rag
+
+  chat:
+    build: ./chat
+    ports:
+      - "8001:8001"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+
+  search:
+    build: ./search
+    ports:
+      - "8002:8002"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+
+  think:
+    build: ./think
+    ports:
+      - "8003:8003"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+
+  rag:
+    build: ./rag
+    ports:
+      - "8004:8004"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
