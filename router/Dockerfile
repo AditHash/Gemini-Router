@@ -13,4 +13,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose the ports for the servers
 EXPOSE 8000
 
-CMD ["sh", "-c", "uvicorn 0_mcp_server_true:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "uvicorn 0_mcp_router_true:app --host 0.0.0.0 --port 8000"]
