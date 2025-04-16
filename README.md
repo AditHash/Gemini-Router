@@ -19,7 +19,7 @@ This project is a working implementation of the **Model Context Protocol (MCP)**
 1. Clone the repository:
    ```bash
    git clone https://github.com/AditHash/gemini-mcp-server-chatbot.git
-   cd MCP-prod2
+   cd gemini-mcp-server-chatbot
    ```
 
 2. Set up the `.env` file with your Gemini API key:
@@ -54,6 +54,7 @@ This project is a working implementation of the **Model Context Protocol (MCP)**
 - **.env**: Stores environment variables, including the `GEMINI_API_KEY`.
 
 ## Future Plans
+- Frontend integration
 - Develop a `docker-compose.yaml` template to simplify deployment using Docker.
 - Add more advanced features to the MCP framework, such as dynamic scaling and monitoring.
 - Enhance the integration with Gemini APIs for improved performance and reliability.
