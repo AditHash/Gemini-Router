@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Dict, Any
 import google.generativeai as genai
+from fastapi.middleware.cors import CORSMiddleware
 
 # === Configure Gemini ===
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -21,6 +22,15 @@ with open("config.json") as f:
 
 # === FastAPI App ===
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # === Tool Definitions (Descriptions + Dynamic Endpoints) ===
 TOOLS = [

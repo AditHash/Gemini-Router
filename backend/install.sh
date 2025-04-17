@@ -28,18 +28,39 @@ if [ ! -d "venv" ]; then
     echo "Failed to create virtual environment. Exiting..."
     exit 1
 fi
-source venv/bin/activate
 
-# Ensure pip is installed
-if ! command -v pip &>/dev/null; then
-    echo "pip is not installed. Installing pip..."
-    python3.12 -m ensurepip --upgrade
-    pip install --upgrade pip
+# Detect the operating system to set the correct virtual environment paths
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+    VENV_PATH="venv\\Scripts"
+else
+    VENV_PATH="venv/bin"
 fi
 
-# Install dependencies
-echo "Installing dependencies..."
-pip install --no-cache-dir -r requirements.txt
+# Activate the virtual environment
+if [ -d "venv" ]; then
+    echo "Activating virtual environment..."
+    source "$VENV_PATH/activate"
+else
+    echo "Virtual environment not found. Please ensure it is created. Exiting..."
+    exit 1
+fi
+
+# Ensure pip is installed
+if ! command -v "$VENV_PATH/pip" &>/dev/null; then
+    echo "pip is not installed. Installing pip..."
+    python3.12 -m ensurepip --upgrade
+    "$VENV_PATH/pip" install --upgrade pip
+fi
+
+# Ensure uv is installed
+if ! command -v "$VENV_PATH/uv" &>/dev/null; then
+    echo "uv is not installed. Installing uv..."
+    "$VENV_PATH/pip" install uv
+fi
+
+# Install dependencies using uv
+echo "Installing dependencies with uv..."
+"$VENV_PATH/uv" --no-cache-dir -r requirements.txt
 
 # Load environment variables from .env file
 if [ -f ".env" ]; then
@@ -50,10 +71,16 @@ else
     exit 1
 fi
 
+# Ensure uvicorn is installed
+if ! command -v "$VENV_PATH/uvicorn" &>/dev/null; then
+    echo "uvicorn is not installed. Installing uvicorn..."
+    "$VENV_PATH/pip" install uvicorn
+fi
+
 # Start the servers
 echo "Starting servers..."
-uvicorn chat.1_chat_server:app --host 0.0.0.0 --port 8001 &
-uvicorn rag.4_rag_server:app --host 0.0.0.0 --port 8004 &
-uvicorn search.2_search_server:app --host 0.0.0.0 --port 8002 &
-uvicorn think.3_thinking_server:app --host 0.0.0.0 --port 8003 &
-uvicorn router.0_mcp_router_true:app --host 0.0.0.0 --port 8000
+"$VENV_PATH/uvicorn" chat.1_chat_server:app --host 0.0.0.0 --port 8001 &
+"$VENV_PATH/uvicorn" rag.4_rag_server:app --host 0.0.0.0 --port 8004 &
+"$VENV_PATH/uvicorn" search.2_search_server:app --host 0.0.0.0 --port 8002 &
+"$VENV_PATH/uvicorn" think.3_thinking_server:app --host 0.0.0.0 --port 8003 &
+"$VENV_PATH/uvicorn" router.0_mcp_router_true:app --host 0.0.0.0 --port 8000

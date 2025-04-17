@@ -1,18 +1,10 @@
 fastapi
 uvicorn
-duckduckgo-search # for web search
 requests
-pymongo # for mongodb
 python-dotenv
-pymupdf
-scikit-learn # for text similarity
-numpy
-python-multipart
 langchain
 langchain-community
 langchain-google-genai
-faiss-cpu
-# faiss-gpu # for GPU support
 google-genai
 google-generativeai
-# chromadb
+python-multipart

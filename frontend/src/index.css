@@ -1,0 +1,5 @@
+/* Minimal CSS file to resolve the missing import */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
