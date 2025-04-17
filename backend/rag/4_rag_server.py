@@ -10,11 +10,21 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from fastapi.middleware.cors import CORSMiddleware
 
 # Set Google API key
 os.environ["GOOGLE_API_KEY"] = os.environ.get("GEMINI_API_KEY")
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow requests from the frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 📌 Initialize models
 embedding_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001")

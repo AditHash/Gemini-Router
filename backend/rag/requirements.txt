@@ -8,3 +8,6 @@ langchain-google-genai
 google-genai
 google-generativeai
 python-multipart
+pymupdf
+faiss-cpu
+# faiss-gpu

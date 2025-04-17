@@ -1,20 +1,18 @@
 import React, { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import ChatHeader from "./components/ChatHeader";
+import ChatBody from "./components/ChatBody";
+import ChatFooter from "./components/ChatFooter";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
-import { v4 as uuidv4 } from "uuid";
 
 function App() {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState(uuidv4()); // Initialize with a unique session ID
+  const [sessionId, setSessionId] = useState(uuidv4());
 
-  const handleNewChat = () => {
-    setSessionId(uuidv4()); // Generate a new unique session ID
-    setChatHistory([]); // Clear chat history for the new session
-  };
-
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (message) => {
     if (!message.trim()) {
       alert("Please enter a message.");
       return;
@@ -32,14 +30,14 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          session_id: sessionId, // Use the current session ID
+          session_id: sessionId,
           message: message,
         }),
       });
       const data = await res.json();
       const botResponse = {
         role: "bot",
-        content: JSON.stringify(data, null, 2), // Return raw response
+        content: JSON.stringify(data, null, 2),
       };
       setChatHistory((prev) => [...prev, botResponse]);
     } catch (error) {
@@ -52,17 +50,26 @@ function App() {
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) {
+      alert("No file selected.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      await fetch("http://localhost:8004/upload", {
+      const response = await fetch("http://localhost:8004/upload", {
         method: "POST",
         body: formData,
       });
-      alert("PDF uploaded successfully.");
+
+      if (response.ok) {
+        alert("PDF uploaded successfully.");
+      } else {
+        const errorData = await response.json();
+        alert(`Error uploading PDF: ${errorData.message || response.statusText}`);
+      }
     } catch (error) {
       alert(`Error uploading PDF: ${error.message}`);
     }
@@ -70,44 +77,16 @@ function App() {
 
   return (
     <div className="chat-container">
-      <div className="chat-header">
-        MCP Chatbot
-        <button className="new-chat-button" onClick={handleNewChat}>
-          New Chat
-        </button>
-      </div>
-      <div className="chat-body">
-        {chatHistory.map((chat, index) => (
-          <div
-            key={index}
-            className={`chat-message ${chat.role === "user" ? "user-message" : "bot-message"}`}
-          >
-            {chat.content}
-          </div>
-        ))}
-      </div>
-      <div className="chat-footer">
-        <input
-          type="file"
-          accept="application/pdf"
-          onChange={handleFileUpload}
-          className="upload-button"
-        />
-        <input
-          type="text"
-          className="message-input"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type your message here..."
-        />
-        <button
-          className="send-button"
-          onClick={handleSendMessage}
-          disabled={loading}
-        >
-          {loading ? "Sending..." : "Send"}
-        </button>
-      </div>
+      <ChatHeader onNewChat={() => {
+        setSessionId(uuidv4());
+        setChatHistory([]);
+      }} />
+      <ChatBody chatHistory={chatHistory} />
+      <ChatFooter
+        onSendMessage={handleSendMessage}
+        onFileUpload={handleFileUpload}
+        loading={loading}
+      />
     </div>
   );
 }
