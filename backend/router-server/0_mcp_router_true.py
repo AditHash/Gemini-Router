@@ -122,7 +122,12 @@ class UserQuery(BaseModel):
 # === Prompt Builder ===
 def build_router_prompt(session_id: str, user_query: str):
     history = session_memory.get(session_id, [])
-    history_text = "\n".join([f"{msg['role'].capitalize()}: {msg['content']}" for msg in history])
+    
+    # Ensure all entries in history are formatted correctly
+    history_text = "\n".join([
+        f"{msg['role'].capitalize()}: {msg.get('content', ' '.join(msg.get('parts', [])))}"
+        for msg in history
+    ])
 
     tool_descriptions = "\n\n".join([
         f"Tool: {tool['name']}\nDescription: {tool['description']}\nParams: {json.dumps(tool['parameters']['properties'])}"
@@ -144,7 +149,8 @@ Respond in JSON only:
 {{
   "tool": "tool_name",
   "parameters": {{...}} | null,
-  "confidence": "high | medium | low"
+  "confidence": "high | medium | low",
+  "reply_format": "markdown"
 }}
 """
 
@@ -180,6 +186,9 @@ def ask_router(req: UserQuery):
             "raw_response": raw_response
         }
 
+    # Extract reply format if specified
+    reply_format = tool_call.get("reply_format", "text")
+
     tool_name = tool_call.get("tool")
     params = tool_call.get("parameters", {})
     confidence = tool_call.get("confidence", "unknown")
@@ -187,6 +196,8 @@ def ask_router(req: UserQuery):
     # Handle general chat internally
     if tool_name == "chat" or tool_name is None:
         chat_response = handle_general_chat(req.session_id, req.message)
+        if reply_format == "markdown":
+            chat_response = f"```\n{chat_response}\n```"
         return {
             "status": "success",
             "cached": False,
@@ -210,6 +221,10 @@ def ask_router(req: UserQuery):
 
     # Tool Call
     try:
+        # Ensure the payload matches the expected format for the weather service
+        if tool_name == "weather" and "query" in params:
+            params = {"query": params["query"]}
+
         res = requests.post(tool["endpoint"], json=params)
         res.raise_for_status()
     except Exception as e:
@@ -236,7 +251,7 @@ def ask_router(req: UserQuery):
             "tool_used": tool_name,
             "confidence": confidence,
             "parameters": params,
-            "reply": reply
+            "reply": f"```\n{reply}\n```" if reply_format == "markdown" else reply
         }
     }
 
@@ -245,11 +260,19 @@ def handle_general_chat(session_id: str, message: str):
     Handle general chat internally using the chat model.
     """
     history = session_memory.get(session_id, [])
-    history.append({"role": "user", "content": message})
+    history.append({"role": "user", "parts": [message]})  # Use 'parts' key for the new message
 
-    response = chat_model.generate_content(history)
+    # Ensure all entries in history use the 'parts' key
+    formatted_history = []
+    for entry in history:
+        if "parts" not in entry and "content" in entry:
+            formatted_history.append({"role": entry["role"], "parts": [entry["content"]]})
+        else:
+            formatted_history.append({"role": entry["role"], "parts": entry["parts"]})
+
+    response = chat_model.generate_content(formatted_history)
     reply = response.text
-    history.append({"role": "model", "content": reply})
+    history.append({"role": "model", "parts": [reply]})  # Use 'parts' key for the model's response
 
     session_memory[session_id] = history
     return reply

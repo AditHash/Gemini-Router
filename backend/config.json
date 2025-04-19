@@ -1,7 +1,8 @@
 {
-  "chat": "http://localhost:8000/chat",
-  "search": "http://localhost:8002/search",
-  "think": "http://localhost:8003/think",
-  "weather": "http://localhost:8005/query-weather",
-  "rag": "http://localhost:8004/query"
+  "chat": "http://chat:8001/chat",
+  "search": "http://search:8002/search",
+  "think": "http://think:8003/think",
+  "weather": "http://weather:8005/query-weather",
+  "rag": "http://rag:8004/query",
+  "query": "http://rag:8004/query"
 }

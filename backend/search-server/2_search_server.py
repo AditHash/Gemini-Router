@@ -48,3 +48,15 @@ def grounded_response(query: Query):
         "answer": response.text,
         "sources": sources
     }
+
+class SearchRequest(BaseModel):
+    q: str
+
+@app.post("/search")
+def search(req: SearchRequest):
+    # Simulate a search response
+    return {
+        "question": req.q,
+        "answer": f"Simulated search result for '{req.q}'",
+        "sources": ["https://example.com"]
+    }

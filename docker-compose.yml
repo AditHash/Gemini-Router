@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80" # Expose frontend on port 3000
+    environment:
+      - REACT_APP_API_BASE_URL=http://backend:8000 # Point frontend to backend
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # Backend Router Service
+  backend:
+    build:
+      context: ./backend/router-server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000" # Expose backend router on port 8000
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./backend/config.json:/app/config.json
+    depends_on:
+      - search
+      - think
+      - weather
+      - rag
+      - redis
+    networks:
+      - app-network
+
+  # Search Service
+  search:
+    build:
+      context: ./backend/search-server
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002" # Expose search service on port 8002
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    networks:
+      - app-network
+
+  # Think Service
+  think:
+    build:
+      context: ./backend/think-server
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8003" # Expose think service on port 8003
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    networks:
+      - app-network
+
+  # Weather Service
+  weather:
+    build:
+      context: ./backend/weather-server
+      dockerfile: Dockerfile
+    ports:
+      - "8005:8005" # Expose weather service on port 8005
+    environment:
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+    networks:
+      - app-network
+
+  # RAG Service
+  rag:
+    build:
+      context: ./backend/rag-server
+      dockerfile: Dockerfile
+    ports:
+      - "8004:8004" # Expose RAG service on port 8004
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  # Redis Service
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379" # Expose Redis on port 6379
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

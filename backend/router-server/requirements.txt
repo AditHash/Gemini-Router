@@ -1,5 +1,5 @@
 fastapi
-uvicorn
 python-dotenv
+langchain-google-genai
 google-generativeai
-duckduckgo-search
+uvicorn

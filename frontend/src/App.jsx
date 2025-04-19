@@ -5,12 +5,14 @@ import ChatBody from "./components/ChatBody";
 import ChatFooter from "./components/ChatFooter";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
+import { API_ENDPOINTS } from "./constants/constants";
 
 function App() {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState(uuidv4());
+  const [fileUploading, setFileUploading] = useState(false);
 
   const handleSendMessage = async (message) => {
     if (!message.trim()) {
@@ -24,7 +26,7 @@ function App() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/ask", {
+      const res = await fetch(API_ENDPOINTS.ASK, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,9 +59,10 @@ function App() {
 
     const formData = new FormData();
     formData.append("file", file);
+    setFileUploading(true); // Start spinner
 
     try {
-      const response = await fetch("http://localhost:8004/upload", {
+      const response = await fetch(API_ENDPOINTS.UPLOAD, {
         method: "POST",
         body: formData,
       });
@@ -72,6 +75,8 @@ function App() {
       }
     } catch (error) {
       alert(`Error uploading PDF: ${error.message}`);
+    } finally {
+      setFileUploading(false); // Stop spinner
     }
   };
 
@@ -85,7 +90,7 @@ function App() {
       <ChatFooter
         onSendMessage={handleSendMessage}
         onFileUpload={handleFileUpload}
-        loading={loading}
+        loading={loading || fileUploading} // Pass combined loading state
       />
     </div>
   );

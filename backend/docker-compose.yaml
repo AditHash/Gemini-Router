@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   router:
-    build: ./router
+    build: ./router-server
     ports:
       - "8000:8000"
     environment:
@@ -17,28 +17,28 @@ services:
       - redis
 
   search:
-    build: ./search
+    build: ./search-server
     ports:
       - "8002:8002"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
 
   think:
-    build: ./think
+    build: ./think-server
     ports:
       - "8003:8003"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
 
   weather:
-    build: ./weather
+    build: ./weather-server
     ports:
       - "8005:8005"
     environment:
       - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
 
   rag:
-    build: ./rag
+    build: ./rag-server
     ports:
       - "8004:8004"
     environment:

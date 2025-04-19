@@ -1,11 +1,12 @@
 fastapi
-python-dotenv
 langchain
-langchain-community
 langchain-google-genai
-google-generativeai
-python-multipart
-pymupdf
-faiss-cpu
+langchain-community
 redis
+uvicorn
+PyMuPDF
+python-multipart
+python-dotenv
+google-generativeai
+faiss-cpu
 # faiss-gpu

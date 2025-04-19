@@ -3,16 +3,14 @@
 import os
 import tempfile
 from fastapi import FastAPI, UploadFile
-# from langchain.document_loaders import PyMuPDFLoader
 from langchain_community.document_loaders import PyMuPDFLoader
-# from langchain.vectorstores import FAISS
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from fastapi.middleware.cors import CORSMiddleware
 from redis import Redis
-from langchain_community.vectorstores import FAISSRedis
+import pickle
 
 # Set Google API key
 os.environ["GOOGLE_API_KEY"] = os.environ.get("GEMINI_API_KEY")
@@ -45,8 +43,13 @@ async def load_vectorstore():
     """
     global vectorstore
     try:
-        vectorstore = FAISSRedis.load(redis_client, embedding=embedding_model)
-        print("FAISS vector store loaded from Redis.")
+        # Load FAISS index from Redis
+        faiss_data = redis_client.get("faiss_index")
+        if (faiss_data):
+            vectorstore = pickle.loads(faiss_data)
+            print("FAISS vector store loaded from Redis.")
+        else:
+            print("No FAISS vector store found in Redis.")
     except Exception as e:
         print(f"Failed to load FAISS vector store from Redis: {e}")
         vectorstore = None
@@ -59,7 +62,8 @@ async def save_vectorstore():
     global vectorstore
     if vectorstore:
         try:
-            FAISSRedis.save(vectorstore, redis_client)
+            # Save FAISS index to Redis
+            redis_client.set("faiss_index", pickle.dumps(vectorstore))
             print("FAISS vector store saved to Redis.")
         except Exception as e:
             print(f"Failed to save FAISS vector store to Redis: {e}")
@@ -83,7 +87,7 @@ async def upload_pdf(file: UploadFile):
 
     # 🧠 Create or extend FAISS vector store
     if vectorstore is None:
-        vectorstore = FAISSRedis.from_documents(chunks, embedding=embedding_model, redis_client=redis_client)
+        vectorstore = FAISS.from_documents(chunks, embedding=embedding_model)
     else:
         vectorstore.add_documents(chunks)
 
