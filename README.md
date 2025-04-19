@@ -20,6 +20,11 @@ This project is a working implementation of the **Model Context Protocol (MCP)**
   ```
   Replace `<your_gemini_api_key>` and `<your_openweather_api_key>` with your actual API keys.
 
+
+
+## Architecture
+![MCP Architecture](mcp.drawio.svg)
+
 ## How to Run
 
 ### Clone the Repository
@@ -68,8 +73,5 @@ This project is a working implementation of the **Model Context Protocol (MCP)**
 - Enhance the integration with Gemini APIs for improved performance and reliability.
 
 ## Notes
-- Ensure that the `GEMINI_API_KEY` is valid and has the necessary permissions for the Gemini APIs.
+- Ensure that the `GEMINI_API_KEY` and `OPENWEATHER_API_KEY` is valid and has the necessary permissions for the Gemini APIs.
 - If you encounter any issues, check the logs for each server to debug the problem.
-
-## Diagram
-![MCP Architecture](mcp.drawio.svg)
