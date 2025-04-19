@@ -62,7 +62,7 @@ OPENWEATHER_API_KEY=<your_openweather_api_key>
 ---
 
 ## 🧱 Architecture
-![MCP Architecture](mcp.drawio.svg)
+![MCP Architecture](mcp2transparent.drawio.svg)
 
 ---
 
