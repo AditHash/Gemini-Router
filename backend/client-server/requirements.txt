@@ -1,7 +1,4 @@
 fastapi
-uvicorn
-requests
 python-dotenv
 langchain-google-genai
-google-genai
 google-generativeai

@@ -11,6 +11,8 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGener
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from fastapi.middleware.cors import CORSMiddleware
+from redis import Redis
+from langchain_community.vectorstores import FAISSRedis
 
 # Set Google API key
 os.environ["GOOGLE_API_KEY"] = os.environ.get("GEMINI_API_KEY")
@@ -30,8 +32,37 @@ app.add_middleware(
 embedding_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
+# Initialize Redis connection
+redis_client = Redis(host="redis", port=6379, decode_responses=True)
+
 # Global variable to hold the FAISS vector store in memory
 vectorstore = None
+
+@app.on_event("startup")
+async def load_vectorstore():
+    """
+    Load the FAISS vector store from Redis on server startup.
+    """
+    global vectorstore
+    try:
+        vectorstore = FAISSRedis.load(redis_client, embedding=embedding_model)
+        print("FAISS vector store loaded from Redis.")
+    except Exception as e:
+        print(f"Failed to load FAISS vector store from Redis: {e}")
+        vectorstore = None
+
+@app.on_event("shutdown")
+async def save_vectorstore():
+    """
+    Save the FAISS vector store to Redis on server shutdown.
+    """
+    global vectorstore
+    if vectorstore:
+        try:
+            FAISSRedis.save(vectorstore, redis_client)
+            print("FAISS vector store saved to Redis.")
+        except Exception as e:
+            print(f"Failed to save FAISS vector store to Redis: {e}")
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile):
@@ -52,12 +83,11 @@ async def upload_pdf(file: UploadFile):
 
     # 🧠 Create or extend FAISS vector store
     if vectorstore is None:
-        vectorstore = FAISS.from_documents(chunks, embedding=embedding_model)
+        vectorstore = FAISSRedis.from_documents(chunks, embedding=embedding_model, redis_client=redis_client)
     else:
         vectorstore.add_documents(chunks)
 
     return {"status": "uploaded", "chunks": len(chunks)}
-
 
 @app.post("/query")
 async def query_rag(q: dict):

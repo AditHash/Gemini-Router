@@ -1,0 +1,5 @@
+fastapi
+openweather-api
+google-generativeai
+python-dotenv
+

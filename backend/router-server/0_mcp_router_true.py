@@ -6,7 +6,7 @@ import requests
 import os
 import hashlib
 import re
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any
 import google.generativeai as genai
@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # === Configure Gemini ===
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 router_model = genai.GenerativeModel("gemini-1.5-flash")
+chat_model = genai.GenerativeModel("gemini-1.5-flash")  # Use the same model for chat
 
 # === Load Tool Endpoint Config ===
 with open("config.json") as f:
@@ -82,6 +83,30 @@ TOOLS = [
             },
             "required": ["question"]
         }
+    },
+    {
+        "name": "weather",
+        "description": "Get current weather information for a specified location.",
+        "endpoint": endpoint_config["weather"],
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"}
+            },
+            "required": ["query"]
+        }
+    },
+    {
+        "name": "rag",
+        "description": "Retrieve answers from uploaded documents.",
+        "endpoint": endpoint_config["rag"],
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "question": {"type": "string"}
+            },
+            "required": ["question"]
+        }
     }
 ]
 
@@ -118,7 +143,7 @@ User query: "{user_query}"
 Respond in JSON only:
 {{
   "tool": "tool_name",
-  "parameters": {{...}},
+  "parameters": {{...}} | null,
   "confidence": "high | medium | low"
 }}
 """
@@ -133,10 +158,9 @@ def ask_router(req: UserQuery):
     cache_key = hashlib.sha256(f"{req.session_id}:{req.message}".encode()).hexdigest()
     if cache_key in tool_cache:
         return {
-            "tool_used": tool_cache[cache_key]["tool"],
+            "status": "success",
             "cached": True,
-            "confidence": tool_cache[cache_key]["confidence"],
-            "reply": tool_cache[cache_key]["reply"]
+            "data": tool_cache[cache_key]
         }
 
     # Ask the router model
@@ -150,15 +174,36 @@ def ask_router(req: UserQuery):
     try:
         tool_call = json.loads(cleaned)
     except Exception:
-        return {"error": "Failed to parse LLM output.", "raw": raw_response}
+        return {
+            "status": "error",
+            "message": "Failed to parse LLM output.",
+            "raw_response": raw_response
+        }
 
     tool_name = tool_call.get("tool")
     params = tool_call.get("parameters", {})
     confidence = tool_call.get("confidence", "unknown")
 
+    # Handle general chat internally
+    if tool_name == "chat" or tool_name is None:
+        chat_response = handle_general_chat(req.session_id, req.message)
+        return {
+            "status": "success",
+            "cached": False,
+            "data": {
+                "tool_used": "chat",
+                "confidence": "high",
+                "reply": chat_response
+            }
+        }
+
+    # Handle external tool calls
     tool = next((t for t in TOOLS if t["name"] == tool_name), None)
     if not tool:
-        return {"error": f"Tool '{tool_name}' not found."}
+        return {
+            "status": "error",
+            "message": f"Tool '{tool_name}' not found."
+        }
 
     if "session_id" in tool["parameters"]["properties"]:
         params["session_id"] = req.session_id
@@ -168,21 +213,43 @@ def ask_router(req: UserQuery):
         res = requests.post(tool["endpoint"], json=params)
         res.raise_for_status()
     except Exception as e:
-        return {"error": f"Failed to call tool '{tool_name}'", "details": str(e)}
+        return {
+            "status": "error",
+            "message": f"Failed to call tool '{tool_name}'",
+            "details": str(e)
+        }
 
     reply = res.json()
     history.append({"role": "tool", "content": str(reply)})
 
     tool_cache[cache_key] = {
-        "tool": tool_name,
+        "tool_used": tool_name,
         "parameters": params,
         "confidence": confidence,
         "reply": reply
     }
 
     return {
-        "tool_used": tool_name,
-        "confidence": confidence,
-        "parameters": params,
-        "reply": reply
+        "status": "success",
+        "cached": False,
+        "data": {
+            "tool_used": tool_name,
+            "confidence": confidence,
+            "parameters": params,
+            "reply": reply
+        }
     }
+
+def handle_general_chat(session_id: str, message: str):
+    """
+    Handle general chat internally using the chat model.
+    """
+    history = session_memory.get(session_id, [])
+    history.append({"role": "user", "content": message})
+
+    response = chat_model.generate_content(history)
+    reply = response.text
+    history.append({"role": "model", "content": reply})
+
+    session_memory[session_id] = history
+    return reply

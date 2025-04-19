@@ -10,17 +10,11 @@ services:
     volumes:
       - ./config.json:/app/config.json
     depends_on:
-      - chat
       - search
       - think
+      - weather
       - rag
-
-  chat:
-    build: ./chat
-    ports:
-      - "8001:8001"
-    environment:
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - redis
 
   search:
     build: ./search
@@ -36,9 +30,24 @@ services:
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
 
+  weather:
+    build: ./weather
+    ports:
+      - "8005:8005"
+    environment:
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+
   rag:
     build: ./rag
     ports:
       - "8004:8004"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
