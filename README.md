@@ -1,4 +1,4 @@
-# 🚀 MCP Server using Gemini (Proposed Name: `GeminiNexus`)
+# 🚀 MCP Server using Gemini - `GeminiRouter`
 
 ## 🔍 About
 
