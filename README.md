@@ -67,11 +67,13 @@ This project is a working implementation of the **Model Context Protocol (MCP)**
 - **.env**: Stores environment variables, including the `GEMINI_API_KEY`.
 
 ## Future Plans
-- Frontend integration
-- Develop a `docker-compose.yaml` template to simplify deployment using Docker.
+- UI updates in frontend.
+- Frontend integration in `docker-compose.yaml`.
 - Add more advanced features to the MCP framework, such as dynamic scaling and monitoring.
 - Enhance the integration with Gemini APIs for improved performance and reliability.
 
 ## Notes
 - Ensure that the `GEMINI_API_KEY` and `OPENWEATHER_API_KEY` is valid and has the necessary permissions for the Gemini APIs.
 - If you encounter any issues, check the logs for each server to debug the problem.
+
+
