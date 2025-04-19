@@ -8,7 +8,7 @@ This project is a working implementation of the **Model Context Protocol (MCP)**
 - **Search Server**: Provides search capabilities using Gemini APIs.
 - **RAG Server**: Implements retrieval-augmented generation for enhanced responses.
 - **Thinking Server**: Processes complex logic and reasoning tasks.
-- **Router**: Acts as the central hub, routing requests to the appropriate servers.
+- **Router/Client**: Acts as the central hub, routing requests to the appropriate servers.
 
 ## Prerequisites
 - Python 3.12 or higher must be installed on your system.
@@ -61,7 +61,7 @@ This project is a working implementation of the **Model Context Protocol (MCP)**
 - **search/**: Contains the search server implementation.
 - **rag/**: Contains the RAG server implementation.
 - **think/**: Contains the thinking server implementation.
-- **router/**: Contains the router server implementation.
+- **router/**: Contains the router server implementation. It works as the client.
 
 - **requirements.txt**: Lists the Python dependencies for the project.
 - **.env**: Stores environment variables, including the `GEMINI_API_KEY`.
