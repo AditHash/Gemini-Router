@@ -1,5 +1,5 @@
 # Use Node.js to build the React app
-FROM node:16 as build
+FROM node:18 as build
 
 WORKDIR /app
 COPY package.json package-lock.json ./
